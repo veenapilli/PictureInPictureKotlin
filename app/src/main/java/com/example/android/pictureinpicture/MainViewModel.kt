@@ -27,10 +27,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
 
-class MainViewModel: ViewModel() {
-
+class MainViewModel : ViewModel() {
     private var job: Job? = null
 
     private var startUptimeMillis = SystemClock.uptimeMillis()
@@ -39,15 +37,16 @@ class MainViewModel: ViewModel() {
     private val _started = MutableLiveData(false)
 
     val started: LiveData<Boolean> = _started
-    val time = timeMillis.map { millis ->
-        val minutes = millis / 1000 / 60
-        val m = minutes.toString().padStart(2, '0')
-        val seconds = (millis / 1000) % 60
-        val s = seconds.toString().padStart(2, '0')
-        val hundredths = (millis % 1000) / 10
-        val h = hundredths.toString().padStart(2, '0')
-        "$m:$s:$h"
-    }
+    val time =
+        timeMillis.map { millis ->
+            val minutes = millis / 1000 / 60
+            val m = minutes.toString().padStart(2, '0')
+            val seconds = (millis / 1000) % 60
+            val s = seconds.toString().padStart(2, '0')
+            val hundredths = (millis % 1000) / 10
+            val h = hundredths.toString().padStart(2, '0')
+            "$m:$s:$h"
+        }
 
     /**
      * Starts the stopwatch if it is not yet started, or pauses it if it is already started.

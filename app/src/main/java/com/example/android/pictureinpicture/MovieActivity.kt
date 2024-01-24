@@ -40,20 +40,18 @@ import com.example.android.pictureinpicture.widget.MovieView
  * Demonstrates usage of Picture-in-Picture when using [MediaSessionCompat].
  */
 class MovieActivity : AppCompatActivity() {
-
     companion object {
-
         private const val TAG = "MediaSessionPlaybackActivity"
 
         private const val MEDIA_ACTIONS_PLAY_PAUSE =
             PlaybackStateCompat.ACTION_PLAY or
-                    PlaybackStateCompat.ACTION_PAUSE or
-                    PlaybackStateCompat.ACTION_PLAY_PAUSE
+                PlaybackStateCompat.ACTION_PAUSE or
+                PlaybackStateCompat.ACTION_PLAY_PAUSE
 
         private const val MEDIA_ACTIONS_ALL =
             MEDIA_ACTIONS_PLAY_PAUSE or
-                    PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
-                    PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
 
         private const val PLAYLIST_SIZE = 2
     }
@@ -65,33 +63,33 @@ class MovieActivity : AppCompatActivity() {
     /**
      * Callbacks from the [MovieView] showing the video playback.
      */
-    private val movieListener = object : MovieView.MovieListener() {
+    private val movieListener =
+        object : MovieView.MovieListener() {
+            override fun onMovieStarted() {
+                // We are playing the video now. Update the media session state and the PiP window will
+                // update the actions.
+                updatePlaybackState(
+                    PlaybackStateCompat.STATE_PLAYING,
+                    binding.movie.getCurrentPosition(),
+                    binding.movie.getVideoResourceId(),
+                )
+            }
 
-        override fun onMovieStarted() {
-            // We are playing the video now. Update the media session state and the PiP window will
-            // update the actions.
-            updatePlaybackState(
-                PlaybackStateCompat.STATE_PLAYING,
-                binding.movie.getCurrentPosition(),
-                binding.movie.getVideoResourceId()
-            )
-        }
+            override fun onMovieStopped() {
+                // The video stopped or reached its end. Update the media session state and the PiP
+                // window will update the actions.
+                updatePlaybackState(
+                    PlaybackStateCompat.STATE_PAUSED,
+                    binding.movie.getCurrentPosition(),
+                    binding.movie.getVideoResourceId(),
+                )
+            }
 
-        override fun onMovieStopped() {
-            // The video stopped or reached its end. Update the media session state and the PiP
-            // window will update the actions.
-            updatePlaybackState(
-                PlaybackStateCompat.STATE_PAUSED,
-                binding.movie.getCurrentPosition(),
-                binding.movie.getVideoResourceId()
-            )
+            override fun onMovieMinimized() {
+                // The MovieView wants us to minimize it. We enter Picture-in-Picture mode now.
+                minimize()
+            }
         }
-
-        override fun onMovieMinimized() {
-            // The MovieView wants us to minimize it. We enter Picture-in-Picture mode now.
-            minimize()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,23 +121,25 @@ class MovieActivity : AppCompatActivity() {
         session.isActive = true
         MediaControllerCompat.setMediaController(this, session.controller)
 
-        val metadata = MediaMetadataCompat.Builder()
-            .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, binding.movie.title)
-            .build()
+        val metadata =
+            MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, binding.movie.title)
+                .build()
         session.setMetadata(metadata)
 
         session.setCallback(MediaSessionCallback(binding.movie))
 
-        val state = if (binding.movie.isPlaying) {
-            PlaybackStateCompat.STATE_PLAYING
-        } else {
-            PlaybackStateCompat.STATE_PAUSED
-        }
+        val state =
+            if (binding.movie.isPlaying) {
+                PlaybackStateCompat.STATE_PLAYING
+            } else {
+                PlaybackStateCompat.STATE_PAUSED
+            }
         updatePlaybackState(
             state,
             MEDIA_ACTIONS_ALL,
             binding.movie.getCurrentPosition(),
-            binding.movie.getVideoResourceId()
+            binding.movie.getVideoResourceId(),
         )
     }
 
@@ -172,7 +172,8 @@ class MovieActivity : AppCompatActivity() {
     }
 
     override fun onPictureInPictureModeChanged(
-        isInPictureInPictureMode: Boolean, newConfig: Configuration
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration,
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         if (isInPictureInPictureMode) {
@@ -192,15 +193,16 @@ class MovieActivity : AppCompatActivity() {
         // The movie view turns into the picture-in-picture mode.
         val visibleRect = Rect()
         binding.movie.getGlobalVisibleRect(visibleRect)
-        val params = PictureInPictureParams.Builder()
-            .setAspectRatio(aspectRatio)
-            // Specify the portion of the screen that turns into the picture-in-picture mode.
-            // This makes the transition animation smoother.
-            .setSourceRectHint(visibleRect)
-            // The screen automatically turns into the picture-in-picture mode when it is hidden
-            // by the "Home" button.
-            .setAutoEnterEnabled(true)
-            .build()
+        val params =
+            PictureInPictureParams.Builder()
+                .setAspectRatio(aspectRatio)
+                // Specify the portion of the screen that turns into the picture-in-picture mode.
+                // This makes the transition animation smoother.
+                .setSourceRectHint(visibleRect)
+                // The screen automatically turns into the picture-in-picture mode when it is hidden
+                // by the "Home" button.
+                .setAutoEnterEnabled(true)
+                .build()
         setPictureInPictureParams(params)
         return params
     }
@@ -242,7 +244,7 @@ class MovieActivity : AppCompatActivity() {
     private fun updatePlaybackState(
         @PlaybackStateCompat.State state: Int,
         position: Int,
-        mediaId: Int
+        mediaId: Int,
     ) {
         val actions = session.controller.playbackState.actions
         updatePlaybackState(state, actions, position, mediaId)
@@ -252,12 +254,13 @@ class MovieActivity : AppCompatActivity() {
         @PlaybackStateCompat.State state: Int,
         playbackActions: Long,
         position: Int,
-        mediaId: Int
+        mediaId: Int,
     ) {
-        val builder = PlaybackStateCompat.Builder()
-            .setActions(playbackActions)
-            .setActiveQueueItemId(mediaId.toLong())
-            .setState(state, position.toLong(), 1.0f)
+        val builder =
+            PlaybackStateCompat.Builder()
+                .setActions(playbackActions)
+                .setActiveQueueItemId(mediaId.toLong())
+                .setState(state, position.toLong(), 1.0f)
         session.setPlaybackState(builder.build())
     }
 
@@ -267,9 +270,8 @@ class MovieActivity : AppCompatActivity() {
      * certain direction.
      */
     private inner class MediaSessionCallback(
-        private val movieView: MovieView
+        private val movieView: MovieView,
     ) : MediaSessionCompat.Callback() {
-
         private var indexInPlaylist: Int = 1
 
         override fun onPlay() {
@@ -289,14 +291,14 @@ class MovieActivity : AppCompatActivity() {
                         PlaybackStateCompat.STATE_PLAYING,
                         MEDIA_ACTIONS_PLAY_PAUSE or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS,
                         movieView.getCurrentPosition(),
-                        movieView.getVideoResourceId()
+                        movieView.getVideoResourceId(),
                     )
                 } else {
                     updatePlaybackState(
                         PlaybackStateCompat.STATE_PLAYING,
                         MEDIA_ACTIONS_ALL,
                         movieView.getCurrentPosition(),
-                        movieView.getVideoResourceId()
+                        movieView.getVideoResourceId(),
                     )
                 }
             }
@@ -311,14 +313,14 @@ class MovieActivity : AppCompatActivity() {
                         PlaybackStateCompat.STATE_PLAYING,
                         MEDIA_ACTIONS_PLAY_PAUSE or PlaybackStateCompat.ACTION_SKIP_TO_NEXT,
                         movieView.getCurrentPosition(),
-                        movieView.getVideoResourceId()
+                        movieView.getVideoResourceId(),
                     )
                 } else {
                     updatePlaybackState(
                         PlaybackStateCompat.STATE_PLAYING,
                         MEDIA_ACTIONS_ALL,
                         movieView.getCurrentPosition(),
-                        movieView.getVideoResourceId()
+                        movieView.getVideoResourceId(),
                     )
                 }
             }
