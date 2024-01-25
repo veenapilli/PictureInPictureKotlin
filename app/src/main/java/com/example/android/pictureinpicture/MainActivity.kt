@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         viewModel =
             ViewModelProvider(
                 this,
-                MainViewModelFactory(StopwatchRepository(dataStore)),
+                MainViewModelFactory(StopwatchRepository(dataStore), ClockRepository()),
             )[MainViewModel::class.java]
 
         binding = MainActivityBinding.inflate(layoutInflater)
@@ -100,7 +100,9 @@ class MainActivity : AppCompatActivity() {
         binding.clear.setOnClickListener { viewModel.clear() }
         binding.startOrPause.setOnClickListener { viewModel.startOrPause() }
         binding.pip.setOnClickListener {
-            enterPictureInPictureMode(updatePictureInPictureParams(viewModel.started.value == true))
+            enterPictureInPictureMode(
+                updatePictureInPictureParams(viewModel.started.value == true),
+            )
         }
         binding.switchExample.setOnClickListener {
             startActivity(Intent(this@MainActivity, MovieActivity::class.java))
