@@ -28,7 +28,7 @@ import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainViewModel(private val stopwatchRepository: StopwatchRepository) : ViewModel() {
     private var job: Job? = null
 
     private var startUptimeMillis = SystemClock.uptimeMillis()
@@ -47,6 +47,12 @@ class MainViewModel : ViewModel() {
             val h = hundredths.toString().padStart(2, '0')
             "$m:$s:$h"
         }
+
+    init {
+        viewModelScope.launch {
+            timeMillis.value = stopwatchRepository.fetchOnStartPreferences().time
+        }
+    }
 
     /**
      * Starts the stopwatch if it is not yet started, or pauses it if it is already started.
@@ -76,5 +82,11 @@ class MainViewModel : ViewModel() {
     fun clear() {
         startUptimeMillis = SystemClock.uptimeMillis()
         timeMillis.value = 0L
+    }
+
+    fun saveTime() {
+        viewModelScope.launch {
+            stopwatchRepository.storeTime(timeMillis.value ?: 0L)
+        }
     }
 }

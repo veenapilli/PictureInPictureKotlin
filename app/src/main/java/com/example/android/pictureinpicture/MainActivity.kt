@@ -29,11 +29,12 @@ import android.os.Bundle
 import android.util.Rational
 import android.view.View
 import androidx.activity.trackPipAnimationHintView
-import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.android.pictureinpicture.databinding.MainActivityBinding
@@ -50,11 +51,18 @@ private const val CONTROL_TYPE_START_OR_PAUSE = 2
 private const val REQUEST_CLEAR = 3
 private const val REQUEST_START_OR_PAUSE = 4
 
+// This needs to be a single instance shared across the application
+private val userPref = "user_preferences"
+
+val Context.dataStore by preferencesDataStore(
+    name = userPref,
+)
+
 /**
  * Demonstrates usage of Picture-in-Picture mode on phones and tablets.
  */
 class MainActivity : AppCompatActivity() {
-    private val viewModel: MainViewModel by viewModels()
+    lateinit var viewModel: MainViewModel
     private lateinit var binding: MainActivityBinding
 
     /**
@@ -79,6 +87,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewModel =
+            ViewModelProvider(
+                this,
+                MainViewModelFactory(StopwatchRepository(dataStore)),
+            )[MainViewModel::class.java]
+
         binding = MainActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
         // Event handlers
@@ -201,5 +216,10 @@ class MainActivity : AppCompatActivity() {
                 PendingIntent.FLAG_IMMUTABLE,
             ),
         )
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.saveTime()
     }
 }
